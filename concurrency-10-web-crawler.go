@@ -5,7 +5,11 @@ package main
 
 import (
 	"fmt"
+	"sync"
 )
+
+var doneUrls = make(map[string]bool)
+var mux sync.Mutex
 
 type Fetcher interface {
 	// Fetch returns the body of URL and
@@ -15,27 +19,41 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher) {
-	// TODO: Fetch URLs in parallel.
-	// TODO: Don't fetch the same URL twice.
-	// This implementation doesn't do either:
+func Crawl(url string, depth int, fetcher Fetcher, quit chan bool) {
+	mux.Lock()
+	if doneUrls[url] {
+		mux.Unlock()
+		quit <- true
+		return
+	}
+	doneUrls[url] = true
+	mux.Unlock()
 	if depth <= 0 {
+		quit <- true
 		return
 	}
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
 		fmt.Println(err)
+		quit <- true
 		return
 	}
-	fmt.Printf("found: %s %q\n", url, body)
+	fmt.Printf("found: %s %q %d\n", url, body, len(urls))
+	childQuit := make(chan bool, len(urls))
 	for _, u := range urls {
-		Crawl(u, depth-1, fetcher)
+		go Crawl(u, depth-1, fetcher, childQuit)
 	}
+	for i := 0; i < len(urls); i++ {
+		<-childQuit
+	}
+	quit <- true
 	return
 }
 
 func main() {
-	Crawl("https://golang.org/", 4, fetcher)
+	quit := make(chan bool)
+	go Crawl("https://golang.org/", 4, fetcher, quit)
+	<-quit
 }
 
 // fakeFetcher is Fetcher that returns canned results.
@@ -46,8 +64,8 @@ type fakeResult struct {
 	urls []string
 }
 
-func (f fakeFetcher) Fetch(url string) (string, []string, error) {
-	if res, ok := f[url]; ok {
+func (this fakeFetcher) Fetch(url string) (string, []string, error) {
+	if res, ok := this[url]; ok {
 		return res.body, res.urls, nil
 	}
 	return "", nil, fmt.Errorf("not found: %s", url)
