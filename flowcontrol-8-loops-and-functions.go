@@ -14,7 +14,7 @@ func Sqrt(x float64) float64 {
 	}
 	start := 0.0
 	end := x
-	var mid float64 = (start + end) / 2
+	mid := (start + end) / 2
 	precision := 1e-10
 	for math.Abs(mid*mid-x) > precision {
 		if mid*mid > x {
