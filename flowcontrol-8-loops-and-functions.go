@@ -5,9 +5,26 @@ package main
 
 import (
 	"fmt"
+	"math"
 )
 
 func Sqrt(x float64) float64 {
+	if x == 0 || x == 1 {
+		return x
+	}
+	start := 0.0
+	end := x
+	var mid float64 = (start + end) / 2
+	precision := 1e-10
+	for math.Abs(mid*mid-x) > precision {
+		if mid*mid > x {
+			end = mid
+		} else {
+			start = mid
+		}
+		mid = (start + end) / 2
+	}
+	return mid
 }
 
 func main() {
