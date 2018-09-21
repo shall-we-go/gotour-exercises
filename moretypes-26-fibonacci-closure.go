@@ -8,7 +8,7 @@ import "fmt"
 // fibonacci is a function that returns
 // a function that returns an int.
 func fibonacci() func(int) int {
-	fibonacciFunc := func(num int) int {
+	return func(num int) int {
 		a := 1
 		b := 0
 		temp := 0
@@ -20,7 +20,6 @@ func fibonacci() func(int) int {
 		}
 		return b
 	}
-	return fibonacciFunc
 }
 
 func main() {
