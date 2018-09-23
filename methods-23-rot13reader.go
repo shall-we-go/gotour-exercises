@@ -15,16 +15,16 @@ type rot13Reader struct {
 
 func (this rot13Reader) Read(b []byte) (int, error) {
 	b = b[0:0]
+	fmt.Println(test)
 	for {
 		temp := make([]byte, 1)
 		_, err := this.r.Read(temp)
 		if err == io.EOF {
 			break
 		}
-		A := byte('A')
-		if (temp[0] >= A && temp[0] <= A+13) || (temp[0] >= A+26 && temp[0] <= A+26+13) {
+		if (temp[0] >= 'A' && temp[0] < 'A'+13) || (temp[0] >= 'a' && temp[0] < 'a'+13) {
 			temp[0] += 13
-		} else if (temp[0] > A+13 && temp[0] <= A+26) || (temp[0] > A+26+13 && temp[0] <= A+26+13+26) {
+		} else if (temp[0] >= 'A'+13 && temp[0] <= 'A'+26) || (temp[0] >= 'a'+13 && temp[0] <= 'a'+26) {
 			temp[0] -= 13
 		}
 		b = append(b, temp[0])
